@@ -14,4 +14,10 @@ del base_gates, controlled_gates
 
 from cirq.qutrit.ancilla_generation_gate import AncillaGen
 
-from cirq.qutrit.evaluate import verify_gate
+from cirq.qutrit.evaluate import (
+    default_ternary_state,
+    evaluate_ternary_circuit,
+    trit_list_to_state,
+    verify_gate,
+    verify_gate_inverse,
+)
