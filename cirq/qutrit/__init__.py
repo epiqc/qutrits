@@ -13,3 +13,5 @@ vars().update(controlled_gates)
 del base_gates, controlled_gates
 
 from cirq.qutrit.ancilla_generation_gate import AncillaGen
+
+from cirq.qutrit.evaluate import verify_gate
