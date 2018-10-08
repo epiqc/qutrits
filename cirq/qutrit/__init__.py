@@ -25,4 +25,5 @@ from cirq.qutrit.plus_k_gate import (
     PlusKGate,
     PlusKCarryGate,
     PlusKUncarryAddGate,
+    MultiOrAndGate,
 )
