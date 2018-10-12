@@ -19,6 +19,10 @@ class TernaryLogicGateOperation(ops.GateOperation, TernaryLogicEffect):
 
 
 class TernaryLogicGate(ops.Gate, metaclass=abc.ABCMeta):
+    def validate_args(self, qubits):
+        super().validate_args(qubits)
+        self.validate_trits([0] * len(qubits))
+
     def validate_trits(self, trits):
         assert all(trit in range(3) for trit in trits), 'Trit must have value 0, 1, or 2'
 

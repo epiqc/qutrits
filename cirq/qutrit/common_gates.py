@@ -164,7 +164,7 @@ vars().update(base_gates)
 # Generate controlled gates
 from cirq.qutrit.controlled_ternary_gate import ControlledTernaryGate
 controlled_gates = {}
-max_controls = 4
+max_controls = 2
 for name, gate in base_gates.items():
     controlled_gates.update(
         ControlledTernaryGate.all_controlled_gates(gate, name, max_controls))

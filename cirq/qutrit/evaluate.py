@@ -28,7 +28,10 @@ def trit_list_to_state(qubits, trit_values):
     state.update(zip(qubits, trit_values))
     return state
 
-def verify_gate(gate, num_qubits, max_test_value=2**14):
+def verify_gate(gate, num_qubits, max_test_value=2**100, trinary_input=False):
+    if trinary_input:
+        raise NotImplementedError
+        # TODO
     qubits = line.LineQubit.range(num_qubits)
     op = gate(*qubits)
     sub_ops = tuple(ops.flatten_op_tree(op.default_decompose()))
