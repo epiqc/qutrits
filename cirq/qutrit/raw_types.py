@@ -11,8 +11,9 @@ class TernaryLogicEffect(metaclass=abc.ABCMeta):
 class TernaryLogicGateOperation(ops.GateOperation, TernaryLogicEffect):
     def apply_to_ternary_state(self, state):
         trits = [state[q] for q in self.qubits]
+        len_trits = len(trits)
         new_trits = self.gate.applied_to_trits(trits)
-        assert len(trits) == len(new_trits), 'Number of input and output qutrits must be the same'
+        assert len_trits == len(new_trits), 'Number of input and output qutrits must be the same, {}'.format(self)
         for q, trit in zip(self.qubits, new_trits):
             assert trit in range(3), 'Trit must have value 0, 1, or 2'
             state[q] = trit
