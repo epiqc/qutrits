@@ -10,6 +10,8 @@ class TernaryLogicEffect(metaclass=abc.ABCMeta):
 
 class TernaryLogicGateOperation(ops.GateOperation, TernaryLogicEffect):
     def apply_to_ternary_state(self, state):
+        assert len(self.qubits) == len(set(self.qubits)), (
+            'Operation uses the same qutrits mutiple times: {}'.format(self))
         trits = [state[q] for q in self.qubits]
         len_trits = len(trits)
         new_trits = self.gate.applied_to_trits(trits)
