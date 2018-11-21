@@ -12,6 +12,8 @@ vars().update(base_gates)
 vars().update(controlled_gates)
 del base_gates, controlled_gates
 
+from .btb_cnx_gate import *
+
 from cirq.qutrit.evaluate import (
     decompose_depth,
     default_ternary_state,

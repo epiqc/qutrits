@@ -1026,14 +1026,14 @@ class Circuit(ops.ParameterizableEffect):
         n = len(qs)
 
         if isinstance(initial_state, int):
-            state = np.zeros(1 << n, dtype=dtype)
+            state = np.zeros(3 ** n, dtype=dtype)
             state[initial_state] = 1
         else:
             state = initial_state.astype(dtype)
-        state.shape = (2,) * n
+        state.shape = (3,) * n
 
         result = _apply_unitary_circuit(self, state, qs, ext, dtype)
-        return result.reshape((1 << n,))
+        return result.reshape((3 ** n,))
 
     def to_text_diagram(
             self,
@@ -1347,7 +1347,7 @@ def _apply_unitary_circuit(circuit: Circuit,
     qubit_map = {q: i for i, q in enumerate(qubits)}
     buffer = np.zeros(state.shape, dtype=dtype)
     for mat, qs in _extract_unitaries(circuit.all_operations(), ext):
-        matrix = mat.astype(dtype).reshape((2,) * (2 * len(qs)))
+        matrix = mat.astype(dtype).reshape((3,) * (2 * len(qs)))
         indices = [qubit_map[q] for q in qs]
         linalg.targeted_left_multiply(matrix, state, indices, out=buffer)
         state, buffer = buffer, state
