@@ -1,6 +1,7 @@
 
 from cirq import ops
 from cirq.qutrit import raw_types
+import numpy as np
 
 
 class PlusOneGate(raw_types.TernaryLogicGate,
@@ -19,6 +20,11 @@ class PlusOneGate(raw_types.TernaryLogicGate,
     def applied_to_trits(self, trits):
         return [(trits[0] + 1) % 3]
 
+    def _unitary_(self):
+        return np.array([[0, 0, 1],
+                         [1, 0, 0],
+                         [0, 1, 0]])
+
 
 class MinusOneGate(raw_types.TernaryLogicGate,
                    ops.ReversibleEffect,
@@ -35,6 +41,11 @@ class MinusOneGate(raw_types.TernaryLogicGate,
 
     def applied_to_trits(self, trits):
         return [(trits[0] - 1) % 3]
+
+    def _unitary_(self):
+        return np.array([[0, 1, 0],
+                         [0, 0, 1],
+                         [1, 0, 0]])
 
 
 class Flip01Gate(raw_types.TernaryLogicGate,
