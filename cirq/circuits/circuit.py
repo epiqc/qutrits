@@ -1365,9 +1365,9 @@ def _apply_unitary_circuit(circuit: Circuit,
             linalg.targeted_left_multiply(matrix, state, indices, out=buffer)
             state, buffer = buffer, state
             if matrix.size == 9:
-                gate_error_matrix = DressedQutritGateErrors().pick_single_qutrit_channel()
+                gate_error_matrix = DressedQutritErrors().pick_single_qutrit_gate_channel()
             elif matrix.size == 81:
-                gate_error_matrix = DressedQutritGateErrors().pick_two_qutrit_channel()
+                gate_error_matrix = DressedQutritErrors().pick_two_qutrit_gate_channel()
             else:
                 assert False, "%s" % matrix.size
             gate_error_matrix = gate_error_matrix.astype(dtype).reshape((3,) * (2 * len(qs)))
@@ -1449,17 +1449,17 @@ def weighted_draw(weights):
     weights = [weight / total for weight in weights]  # normalize anyways to make sum exactly 1
     return np.random.choice(len(weights), p=weights)
 
-class CoherentNoiseChannel(object):
+class NoiseChannel(object):
     single_qutrit_kraus_operators = []
     single_qutrit_kraus_operator_weights = []
     two_qutrit_kraus_operators = []
     two_qutrit_kraus_operator_weights = []
 
-    def pick_single_qutrit_channel(self):
+    def pick_single_qutrit_gate_channel(self):
         index = weighted_draw(self.single_qutrit_kraus_operator_weights)
         return self.single_qutrit_kraus_operators[index]
 
-    def pick_two_qutrit_channel(self):
+    def pick_two_qutrit_gate_channel(self):
         index = weighted_draw(self.two_qutrit_kraus_operator_weights)
         return self.two_qutrit_kraus_operators[index]
 
@@ -1468,7 +1468,7 @@ Z3 = np.array([[1, 0, 0], [0, math.e ** (math.pi * 1j * -2.0/3.0), 0], [0, 0, ma
 Y3 = X3 @ Z3
 V3 = X3 @ Z3 @ Z3
 
-class DressedQutritGateErrors(CoherentNoiseChannel):
+class DressedQutritErrors(NoiseChannel):
 
     single_qutrit_kraus_operators = [X3, X3 @ X3, Z3, Z3 @ Z3, Y3, Y3 @ Y3, V3, V3 @ V3, np.eye(3)]
     single_qutrit_kraus_operator_weights = [8.07695E-7, 8.35653E-7, 4.49109E-7, 4.49109E-7, 8.07695E-7, 8.35653E-7, 8.07695E-7, 8.35653E-7, 0.999846624680123]
@@ -1497,5 +1497,5 @@ class DressedQutritGateErrors(CoherentNoiseChannel):
     two_qutrit_kraus_operator_weights =  XX_weights + X2X_weights + ZX_weights + Z2X_weights + YX_weights + Y2X_weights + VX_weights + V2X_weights + TX_weights
 
 
-class PauliDepolarizing(CoherentNoiseChannel):
+class PauliDepolarizing(NoiseChannel):
     pass
