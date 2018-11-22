@@ -29,7 +29,7 @@ class TernaryLogicGate(ops.Gate, metaclass=abc.ABCMeta):
     def validate_trits(self, trits):
         assert all(trit in range(3) for trit in trits), 'Trit must have value 0, 1, or 2'
 
-    @abc.abstractmethod
+    #@abc.abstractmethod
     def applied_to_trits(self, trits):
         raise NotImplementedError
 
