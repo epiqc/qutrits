@@ -1356,24 +1356,43 @@ def _apply_unitary_circuit(circuit: Circuit,
     """
     qubit_map = {q: i for i, q in enumerate(qubits)}
     buffer = np.zeros(state.shape, dtype=dtype)
-    for mat, qs in _extract_unitaries(circuit.all_operations(), ext):
-        matrix = mat.astype(dtype).reshape((3,) * (2 * len(qs)))
-        indices = [qubit_map[q] for q in qs]
-        linalg.targeted_left_multiply(matrix, state, indices, out=buffer)
-        state, buffer = buffer, state
-
-        if matrix.size == 9:
-            gate_error_matrix = DressedQutritGateErrors().pick_single_qutrit_channel()
-        elif matrix.size == 81:
-            gate_error_matrix = DressedQutritGateErrors().pick_two_qutrit_channel()
-        else:
-            assert False, "%s" % matrix.size
-        gate_error_matrix = gate_error_matrix.astype(dtype).reshape((3,) * (2 * len(qs)))
-        linalg.targeted_left_multiply(gate_error_matrix, state, indices, out=buffer)
-        state, buffer = buffer, state
-
+    mat_and_qs_list = list(_extract_unitaries(circuit.all_operations(), ext))
+    moments = reconstruct_moments(mat_and_qs_list)
+    for moment in moments:
+        for mat, qs in moment:
+            matrix = mat.astype(dtype).reshape((3,) * (2 * len(qs)))
+            indices = [qubit_map[q] for q in qs]
+            linalg.targeted_left_multiply(matrix, state, indices, out=buffer)
+            state, buffer = buffer, state
+            if matrix.size == 9:
+                gate_error_matrix = DressedQutritGateErrors().pick_single_qutrit_channel()
+            elif matrix.size == 81:
+                gate_error_matrix = DressedQutritGateErrors().pick_two_qutrit_channel()
+            else:
+                assert False, "%s" % matrix.size
+            gate_error_matrix = gate_error_matrix.astype(dtype).reshape((3,) * (2 * len(qs)))
+            linalg.targeted_left_multiply(gate_error_matrix, state, indices, out=buffer)
+            state, buffer = buffer, state
     return state
 
+
+def reconstruct_moments(mat_and_qs_list):
+    mat_and_qs_list = list(mat_and_qs_list)
+    moments = []
+    while len(mat_and_qs_list) > 0:
+        blocked_qs = set()
+        moment = []
+        mat_and_qs_list_next = []
+        for mat, qs in mat_and_qs_list:
+            if any([q in blocked_qs for q in qs]):
+                blocked_qs.update(qs)  # even if we're not adding, we want to block dependent gates
+                mat_and_qs_list_next.append((mat, qs))
+            else:
+                moment.append((mat, qs))
+                blocked_qs.update(qs)
+        mat_and_qs_list = mat_and_qs_list_next
+        moments.append(moment)
+    return moments
 
 
 def _extract_unitaries(operations: Iterable[ops.Operation],
