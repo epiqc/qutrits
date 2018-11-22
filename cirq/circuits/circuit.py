@@ -27,6 +27,7 @@ from typing import (
 )
 
 import numpy as np
+import math
 
 from cirq import devices, ops, extension, study, linalg, protocols
 from cirq.circuits.insert_strategy import InsertStrategy
@@ -1360,7 +1361,19 @@ def _apply_unitary_circuit(circuit: Circuit,
         indices = [qubit_map[q] for q in qs]
         linalg.targeted_left_multiply(matrix, state, indices, out=buffer)
         state, buffer = buffer, state
+
+        if matrix.size == 9:
+            gate_error_matrix = DressedQutritGateErrors().pick_single_qutrit_channel()
+        elif matrix.size == 81:
+            gate_error_matrix = DressedQutritGateErrors().pick_two_qutrit_channel()
+        else:
+            assert False, "%s" % matrix.size
+        gate_error_matrix = gate_error_matrix.astype(dtype).reshape((3,) * (2 * len(qs)))
+        linalg.targeted_left_multiply(gate_error_matrix, state, indices, out=buffer)
+        state, buffer = buffer, state
+
     return state
+
 
 
 def _extract_unitaries(operations: Iterable[ops.Operation],
@@ -1407,3 +1420,63 @@ def _list_repr_with_indented_item_lines(items: Sequence[Any]) -> str:
     block = '\n'.join([repr(op) + ',' for op in items])
     indented = '    ' + '\n    '.join(block.split('\n'))
     return '[\n{}\n]'.format(indented)
+
+
+
+def weighted_draw(weights):
+    """Returns random index, with draw probabilities weighted by the given weights."""
+    assert sum(weights) > .999 and sum(weights) < 1.001, 'sum is %s for weights: %s' % (sum(weights), weights)
+    total = sum(weights)
+    weights = [weight / total for weight in weights]  # normalize anyways to make sum exactly 1
+    return np.random.choice(len(weights), p=weights)
+
+class CoherentNoiseChannel(object):
+    single_qutrit_kraus_operators = []
+    single_qutrit_kraus_operator_weights = []
+    two_qutrit_kraus_operators = []
+    two_qutrit_kraus_operator_weights = []
+
+    def pick_single_qutrit_channel(self):
+        index = weighted_draw(self.single_qutrit_kraus_operator_weights)
+        return self.single_qutrit_kraus_operators[index]
+
+    def pick_two_qutrit_channel(self):
+        index = weighted_draw(self.two_qutrit_kraus_operator_weights)
+        return self.two_qutrit_kraus_operators[index]
+
+X3 = np.array([[0, 0, 1], [1, 0, 0], [0, 1, 0]])
+Z3 = np.array([[1, 0, 0], [0, math.e ** (math.pi * 1j * -2.0/3.0), 0], [0, 0, math.e ** (math.pi * 1j * -4.0/3.0)]])
+Y3 = X3 @ Z3
+V3 = X3 @ Z3 @ Z3
+
+class DressedQutritGateErrors(CoherentNoiseChannel):
+
+    single_qutrit_kraus_operators = [X3, X3 @ X3, Z3, Z3 @ Z3, Y3, Y3 @ Y3, V3, V3 @ V3, np.eye(3)]
+    single_qutrit_kraus_operator_weights = [8.07695E-7, 8.35653E-7, 4.49109E-7, 4.49109E-7, 8.07695E-7, 8.35653E-7, 8.07695E-7, 8.35653E-7, 0.999846624680123]
+
+    XX_weights = [4.517809752636722e-10,4.674189903317726e-10,2.512069977868293e-10,2.512069977868293e-10,4.517809752636722e-10,4.674189903317726e-10,4.517809752636722e-10,4.674189903317726e-10,0.000021251879958915915]
+    X2X_weights = [4.674189903317726e-10,4.835983020207133e-10,2.5990231483578203e-10,2.5990231483578203e-10,4.674189903317726e-10,4.835983020207133e-10,4.674189903317726e-10,4.835983020207133e-10,0.00002198749574891023]
+    ZX_weights = [2.512069977868293e-10,2.5990231483578203e-10,1.3968041859275328e-10,1.3968041859275328e-10,2.512069977868293e-10,2.5990231483578203e-10,2.512069977868293e-10,2.5990231483578203e-10,0.000011816834382389788]
+    Z2X_weights = [2.512069977868293e-10,2.5990231483578203e-10,1.3968041859275328e-10,1.3968041859275328e-10,2.512069977868293e-10,2.5990231483578203e-10,2.512069977868293e-10,2.5990231483578203e-10,0.000011816834382389788]
+    YX_weights = [4.517809752636722e-10,4.674189903317726e-10,2.512069977868293e-10,2.512069977868293e-10,4.517809752636722e-10,4.674189903317726e-10,4.517809752636722e-10,4.674189903317726e-10,0.000021251879958915915]
+    Y2X_weights = [4.674189903317726e-10,4.835983020207133e-10,2.5990231483578203e-10,2.5990231483578203e-10,4.674189903317726e-10,4.835983020207133e-10,4.674189903317726e-10,4.835983020207133e-10,0.00002198749574891023]
+    VX_weights = [4.517809752636722e-10,4.674189903317726e-10,2.512069977868293e-10,2.512069977868293e-10,4.517809752636722e-10,4.674189903317726e-10,4.517809752636722e-10,4.674189903317726e-10,0.000021251879958915915]
+    V2X_weights = [4.674189903317726e-10,4.835983020207133e-10,2.5990231483578203e-10,2.5990231483578203e-10,4.674189903317726e-10,4.835983020207133e-10,4.674189903317726e-10,4.835983020207133e-10,0.00002198749574891023]
+    TX_weights = [0.000021251879958915915,0.00002198749574891023,0.000011816834382389788,0.000011816834382389788,0.000021251879958915915,0.00002198749574891023,0.000021251879958915915,0.00002198749574891023,0.9996932728842347]
+
+    XX_operators = [np.kron(X3, X3), np.kron(X3, X3 @ X3), np.kron(X3, Z3), np.kron(X3, Z3 @ Z3), np.kron(X3, Y3), np.kron(X3, Y3 @ Y3), np.kron(X3, V3), np.kron(X3, V3 @ V3), np.kron(X3, np.eye(3))]
+    X2X_operators = [np.kron(X3 @ X3, X3), np.kron(X3 @ X3, X3 @ X3), np.kron(X3 @ X3, Z3), np.kron(X3 @ X3, Z3 @ Z3), np.kron(X3 @ X3, Y3), np.kron(X3 @ X3, Y3 @ Y3), np.kron(X3 @ X3, V3), np.kron(X3 @ X3, V3 @ V3), np.kron(X3 @ X3, np.eye(3))]
+    ZX_operators = [np.kron(Z3, X3), np.kron(Z3, X3 @ X3), np.kron(Z3, Z3), np.kron(Z3, Z3 @ Z3), np.kron(Z3, Y3), np.kron(Z3, Y3 @ Y3), np.kron(Z3, V3), np.kron(Z3, V3 @ V3), np.kron(Z3, np.eye(3))]
+    Z2X_operators = [np.kron(Z3 @ Z3, X3), np.kron(Z3 @ Z3, X3 @ X3), np.kron(Z3 @ Z3, Z3), np.kron(Z3 @ Z3, Z3 @ Z3), np.kron(Z3 @ Z3, Y3), np.kron(Z3 @ Z3, Y3 @ Y3), np.kron(Z3 @ Z3, V3), np.kron(Z3 @ Z3, V3 @ V3), np.kron(Z3 @ Z3, np.eye(3))]
+    YX_operators = [np.kron(Y3, X3), np.kron(Y3, X3 @ X3), np.kron(Y3, Z3), np.kron(Y3, Z3 @ Z3), np.kron(Y3, Y3), np.kron(Y3, Y3 @ Y3), np.kron(Y3, V3), np.kron(Y3, V3 @ V3), np.kron(Y3, np.eye(3))]
+    Y2X_operators = [np.kron(Y3 @ Y3, X3), np.kron(Y3 @ Y3, X3 @ X3), np.kron(Y3 @ Y3, Z3), np.kron(Y3 @ Y3, Z3 @ Z3), np.kron(Y3 @ Y3, Y3), np.kron(Y3 @ Y3, Y3 @ Y3), np.kron(Y3 @ Y3, V3), np.kron(Y3 @ Y3, V3 @ V3), np.kron(Y3 @ Y3, np.eye(3))]
+    VX_operators = [np.kron(V3, X3), np.kron(V3, X3 @ X3), np.kron(V3, Z3), np.kron(V3, Z3 @ Z3), np.kron(V3, Y3), np.kron(V3, Y3 @ Y3), np.kron(V3, V3), np.kron(V3, V3 @ V3), np.kron(V3, np.eye(3))]
+    V2X_operators = [np.kron(V3 @ V3, X3), np.kron(V3 @ V3, X3 @ X3), np.kron(V3 @ V3, Z3), np.kron(V3 @ V3, Z3 @ Z3), np.kron(V3 @ V3, Y3), np.kron(V3 @ V3, Y3 @ Y3), np.kron(V3 @ V3, V3), np.kron(V3 @ V3, V3 @ V3), np.kron(V3 @ V3, np.eye(3))]
+    TX_operators = [np.kron(np.eye(3), X3), np.kron(np.eye(3), X3 @ X3), np.kron(np.eye(3), Z3), np.kron(np.eye(3), Z3 @ Z3), np.kron(np.eye(3), Y3), np.kron(np.eye(3), Y3 @ Y3), np.kron(np.eye(3), V3), np.kron(np.eye(3), V3 @ V3), np.kron(np.eye(3), np.eye(3))]
+
+    two_qutrit_kraus_operators = XX_operators + X2X_operators + ZX_operators + Z2X_operators + YX_operators + Y2X_operators + VX_operators + V2X_operators + TX_operators
+    two_qutrit_kraus_operator_weights =  XX_weights + X2X_weights + ZX_weights + Z2X_weights + YX_weights + Y2X_weights + VX_weights + V2X_weights + TX_weights
+
+
+class PauliDepolarizing(CoherentNoiseChannel):
+    pass
