@@ -1030,10 +1030,19 @@ class Circuit(ops.ParameterizableEffect):
             state[initial_state] = 1
         else:
             state = initial_state.astype(dtype)
+
+        target_output_state = np.copy(state)
+        tmp = target_output_state[int((n - 1) * '1' + '0', 3)]
+        target_output_state[int((n - 1) * '1' + '0', 3)] = target_output_state[int((n - 1) * '1' + '1', 3)]
+        target_output_state[int((n - 1) * '1' + '1', 3)] = tmp
+
         state.shape = (3,) * n
 
         result = _apply_unitary_circuit(self, state, qs, ext, dtype)
-        return result.reshape((3 ** n,))
+        result = result.reshape((3 ** n,))
+
+        # return fidelity between result and target_output_state
+        return np.linalg.norm(np.vdot(result, target_output_state)) ** 2, result
 
     def to_text_diagram(
             self,
