@@ -1364,6 +1364,8 @@ def _apply_unitary_circuit(circuit: Circuit,
             indices = [qubit_map[q] for q in qs]
             linalg.targeted_left_multiply(matrix, state, indices, out=buffer)
             state, buffer = buffer, state
+
+            # Gate error:
             if matrix.size == 9:
                 gate_error_matrix = DressedQutritErrors().pick_single_qutrit_gate_channel()
             elif matrix.size == 81:
@@ -1373,6 +1375,17 @@ def _apply_unitary_circuit(circuit: Circuit,
             gate_error_matrix = gate_error_matrix.astype(dtype).reshape((3,) * (2 * len(qs)))
             linalg.targeted_left_multiply(gate_error_matrix, state, indices, out=buffer)
             state, buffer = buffer, state
+
+        # Idle Errors:
+        for index in range(len(qubits)):
+            if any([len(qs) == 2 for mat, qs in moment]):  # apply long idle channel
+                gate_error_matrix = DressedQutritErrors().pick_long_idle_channel()
+            else:
+                gate_error_matrix = DressedQutritErrors().pick_short_idle_channel()
+            gate_error_matrix = gate_error_matrix.astype(dtype).reshape((3,) * 2)
+            linalg.targeted_left_multiply(gate_error_matrix, state, [index], out=buffer)
+            state, buffer = buffer, state
+
     return state
 
 
@@ -1455,6 +1468,10 @@ class NoiseChannel(object):
     two_qutrit_kraus_operators = []
     two_qutrit_kraus_operator_weights = []
 
+    idle_channel_operators = []
+    long_idle_channel_weights = []
+    short_idle_channel_weights = []
+
     def pick_single_qutrit_gate_channel(self):
         index = weighted_draw(self.single_qutrit_kraus_operator_weights)
         return self.single_qutrit_kraus_operators[index]
@@ -1463,12 +1480,24 @@ class NoiseChannel(object):
         index = weighted_draw(self.two_qutrit_kraus_operator_weights)
         return self.two_qutrit_kraus_operators[index]
 
+    def pick_long_idle_channel(self):
+        index = weighted_draw(self.long_idle_channel_weights)
+        return self.idle_channel_operators[index]
+
+    def pick_short_idle_channel(self):
+        index = weighted_draw(self.short_idle_channel_weights)
+        return self.idle_channel_operators[index]
+
+
 X3 = np.array([[0, 0, 1], [1, 0, 0], [0, 1, 0]])
 Z3 = np.array([[1, 0, 0], [0, math.e ** (math.pi * 1j * -2.0/3.0), 0], [0, 0, math.e ** (math.pi * 1j * -4.0/3.0)]])
 Y3 = X3 @ Z3
 V3 = X3 @ Z3 @ Z3
 
 class DressedQutritErrors(NoiseChannel):
+    idle_channel_operators = [Z3, Z3 @ Z3, np.eye(3)]
+    long_idle_channel_weights = [0.0000228617, 0.0000228617, 0.9999542766]
+    short_idle_channel_weights = [5.71579E-10, 5.71579E-10, 0.99999999885]
 
     single_qutrit_kraus_operators = [X3, X3 @ X3, Z3, Z3 @ Z3, Y3, Y3 @ Y3, V3, V3 @ V3, np.eye(3)]
     single_qutrit_kraus_operator_weights = [8.07695E-7, 8.35653E-7, 4.49109E-7, 4.49109E-7, 8.07695E-7, 8.35653E-7, 8.07695E-7, 8.35653E-7, 0.999846624680123]
