@@ -1526,5 +1526,37 @@ class DressedQutritErrors(NoiseChannel):
     two_qutrit_kraus_operator_weights =  XX_weights + X2X_weights + ZX_weights + Z2X_weights + YX_weights + Y2X_weights + VX_weights + V2X_weights + TX_weights
 
 
+class BareQutritErrors(NoiseChannel):
+    idle_channel_operators = [Z3, Z3 @ Z3, np.eye(3)]
+    long_idle_channel_weights = [0, 0.00007751, 0.99992249] 
+    short_idle_channel_weights = [0, 0.0000000019379, 0.99999999806]
+
+    single_qutrit_kraus_operators = [X3, X3 @ X3, Z3, Z3 @ Z3, Y3, Y3 @ Y3, V3, V3 @ V3, np.eye(3)]
+    single_qutrit_kraus_operator_weights = [8.076953189667142e-7,8.356530070058442e-7,4.4910858870426395e-7,4.4910858870426395e-7,8.076953189667142e-7,8.356530070058442e-7,8.076953189667142e-7,8.356530070058442e-7,0.999846624680123]
+
+    XX_weights = [4.517809752636722e-10,4.674189903317726e-10,2.512069977868293e-10,2.512069977868293e-10,4.517809752636722e-10,4.674189903317726e-10,4.517809752636722e-10,4.674189903317726e-10,0.000021251879958915915]
+    X2X_weights = [4.674189903317726e-10,4.835983020207133e-10,2.5990231483578203e-10,2.5990231483578203e-10,4.674189903317726e-10,4.835983020207133e-10,4.674189903317726e-10,4.835983020207133e-10,0.00002198749574891023]
+    ZX_weights = [2.512069977868293e-10,2.5990231483578203e-10,1.3968041859275328e-10,1.3968041859275328e-10,2.512069977868293e-10,2.5990231483578203e-10,2.512069977868293e-10,2.5990231483578203e-10,0.000011816834382389788]
+    Z2X_weights = [2.512069977868293e-10,2.5990231483578203e-10,1.3968041859275328e-10,1.3968041859275328e-10,2.512069977868293e-10,2.5990231483578203e-10,2.512069977868293e-10,2.5990231483578203e-10,0.000011816834382389788]
+    YX_weights = [4.517809752636722e-10,4.674189903317726e-10,2.512069977868293e-10,2.512069977868293e-10,4.517809752636722e-10,4.674189903317726e-10,4.517809752636722e-10,4.674189903317726e-10,0.000021251879958915915]
+    Y2X_weights = [4.674189903317726e-10,4.835983020207133e-10,2.5990231483578203e-10,2.5990231483578203e-10,4.674189903317726e-10,4.835983020207133e-10,4.674189903317726e-10,4.835983020207133e-10,0.00002198749574891023]
+    VX_weights = [4.517809752636722e-10,4.674189903317726e-10,2.512069977868293e-10,2.512069977868293e-10,4.517809752636722e-10,4.674189903317726e-10,4.517809752636722e-10,4.674189903317726e-10,0.000021251879958915915]
+    V2X_weights = [4.674189903317726e-10,4.835983020207133e-10,2.5990231483578203e-10,2.5990231483578203e-10,4.674189903317726e-10,4.835983020207133e-10,4.674189903317726e-10,4.835983020207133e-10,0.00002198749574891023]
+    TX_weights = [0.000021251879958915915,0.00002198749574891023,0.000011816834382389788,0.000011816834382389788,0.000021251879958915915,0.00002198749574891023,0.000021251879958915915,0.00002198749574891023,0.9996932728842347]
+
+    XX_operators = [np.kron(X3, X3), np.kron(X3, X3 @ X3), np.kron(X3, Z3), np.kron(X3, Z3 @ Z3), np.kron(X3, Y3), np.kron(X3, Y3 @ Y3), np.kron(X3, V3), np.kron(X3, V3 @ V3), np.kron(X3, np.eye(3))]
+    X2X_operators = [np.kron(X3 @ X3, X3), np.kron(X3 @ X3, X3 @ X3), np.kron(X3 @ X3, Z3), np.kron(X3 @ X3, Z3 @ Z3), np.kron(X3 @ X3, Y3), np.kron(X3 @ X3, Y3 @ Y3), np.kron(X3 @ X3, V3), np.kron(X3 @ X3, V3 @ V3), np.kron(X3 @ X3, np.eye(3))]
+    ZX_operators = [np.kron(Z3, X3), np.kron(Z3, X3 @ X3), np.kron(Z3, Z3), np.kron(Z3, Z3 @ Z3), np.kron(Z3, Y3), np.kron(Z3, Y3 @ Y3), np.kron(Z3, V3), np.kron(Z3, V3 @ V3), np.kron(Z3, np.eye(3))]
+    Z2X_operators = [np.kron(Z3 @ Z3, X3), np.kron(Z3 @ Z3, X3 @ X3), np.kron(Z3 @ Z3, Z3), np.kron(Z3 @ Z3, Z3 @ Z3), np.kron(Z3 @ Z3, Y3), np.kron(Z3 @ Z3, Y3 @ Y3), np.kron(Z3 @ Z3, V3), np.kron(Z3 @ Z3, V3 @ V3), np.kron(Z3 @ Z3, np.eye(3))]
+    YX_operators = [np.kron(Y3, X3), np.kron(Y3, X3 @ X3), np.kron(Y3, Z3), np.kron(Y3, Z3 @ Z3), np.kron(Y3, Y3), np.kron(Y3, Y3 @ Y3), np.kron(Y3, V3), np.kron(Y3, V3 @ V3), np.kron(Y3, np.eye(3))]
+    Y2X_operators = [np.kron(Y3 @ Y3, X3), np.kron(Y3 @ Y3, X3 @ X3), np.kron(Y3 @ Y3, Z3), np.kron(Y3 @ Y3, Z3 @ Z3), np.kron(Y3 @ Y3, Y3), np.kron(Y3 @ Y3, Y3 @ Y3), np.kron(Y3 @ Y3, V3), np.kron(Y3 @ Y3, V3 @ V3), np.kron(Y3 @ Y3, np.eye(3))]
+    VX_operators = [np.kron(V3, X3), np.kron(V3, X3 @ X3), np.kron(V3, Z3), np.kron(V3, Z3 @ Z3), np.kron(V3, Y3), np.kron(V3, Y3 @ Y3), np.kron(V3, V3), np.kron(V3, V3 @ V3), np.kron(V3, np.eye(3))]
+    V2X_operators = [np.kron(V3 @ V3, X3), np.kron(V3 @ V3, X3 @ X3), np.kron(V3 @ V3, Z3), np.kron(V3 @ V3, Z3 @ Z3), np.kron(V3 @ V3, Y3), np.kron(V3 @ V3, Y3 @ Y3), np.kron(V3 @ V3, V3), np.kron(V3 @ V3, V3 @ V3), np.kron(V3 @ V3, np.eye(3))]
+    TX_operators = [np.kron(np.eye(3), X3), np.kron(np.eye(3), X3 @ X3), np.kron(np.eye(3), Z3), np.kron(np.eye(3), Z3 @ Z3), np.kron(np.eye(3), Y3), np.kron(np.eye(3), Y3 @ Y3), np.kron(np.eye(3), V3), np.kron(np.eye(3), V3 @ V3), np.kron(np.eye(3), np.eye(3))]
+
+    two_qutrit_kraus_operators = XX_operators + X2X_operators + ZX_operators + Z2X_operators + YX_operators + Y2X_operators + VX_operators + V2X_operators + TX_operators
+    two_qutrit_kraus_operator_weights =  XX_weights + X2X_weights + ZX_weights + Z2X_weights + YX_weights + Y2X_weights + VX_weights + V2X_weights + TX_weights
+
+
 class PauliDepolarizing(NoiseChannel):
     pass
