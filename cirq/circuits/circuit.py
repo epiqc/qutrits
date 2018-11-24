@@ -1560,6 +1560,48 @@ class FutureSuperconductingQCErrors(GenericQutritErrors):
     long_idle_channel_operators = [np.array([[1,0,0],[0,(1-gamma_1_long)**.5,0],[0,0,(1-gamma_2_long)**.5]]), np.array([[0,gamma_1_long**0.5,0],[0,0,0],[0,0,0]]), np.array([[0,0,gamma_2_long**0.5],[0,0,0],[0,0,0]])]
 
 
+class FutureSuperconductingQCErrorsBetterT1(GenericQutritErrors):
+    p_1 = .0001 / 3
+    p_2 = .001 / 15
+    single_qutrit_kraus_operator_weights = [1 - 8*p_1] + 8 * [p_1]
+    two_qutrit_kraus_operator_weights = [1 - 80*p_2] + 80 * [p_2]
+    # Here, I picked T1 = 10000 microseconds 
+    gamma_1_short = 1 - math.exp(-1 *  100.0 / 10000000.0)
+    gamma_1_long = 1 - math.exp(-1 * 300.0 / 10000000.0)
+    gamma_2_short = 1 - math.exp(-2 *  100.0 / 10000000.0)
+    gamma_2_long = 1 - math.exp(-2 * 300.0 / 10000000.0)
+    short_idle_channel_operators = [np.array([[1,0,0],[0,(1-gamma_1_short)**.5,0],[0,0,(1-gamma_2_short)**.5]]), np.array([[0,gamma_1_short**0.5,0],[0,0,0],[0,0,0]]), np.array([[0,0,gamma_2_short**0.5],[0,0,0],[0,0,0]])]
+    long_idle_channel_operators = [np.array([[1,0,0],[0,(1-gamma_1_long)**.5,0],[0,0,(1-gamma_2_long)**.5]]), np.array([[0,gamma_1_long**0.5,0],[0,0,0],[0,0,0]]), np.array([[0,0,gamma_2_long**0.5],[0,0,0],[0,0,0]])]
+
+
+class FutureSuperconductingQCErrorsBetterT1AndGates(GenericQutritErrors):
+    p_1 = .00001 / 3
+    p_2 = .0001 / 15
+    single_qutrit_kraus_operator_weights = [1 - 8*p_1] + 8 * [p_1]
+    two_qutrit_kraus_operator_weights = [1 - 80*p_2] + 80 * [p_2]
+    # Here, I picked T1 = 1000 microseconds 
+    gamma_1_short = 1 - math.exp(-1 *  100.0 / 1000000.0)
+    gamma_1_long = 1 - math.exp(-1 * 300.0 / 1000000.0)
+    gamma_2_short = 1 - math.exp(-2 *  100.0 / 1000000.0)
+    gamma_2_long = 1 - math.exp(-2 * 300.0 / 1000000.0)
+    short_idle_channel_operators = [np.array([[1,0,0],[0,(1-gamma_1_short)**.5,0],[0,0,(1-gamma_2_short)**.5]]), np.array([[0,gamma_1_short**0.5,0],[0,0,0],[0,0,0]]), np.array([[0,0,gamma_2_short**0.5],[0,0,0],[0,0,0]])]
+    long_idle_channel_operators = [np.array([[1,0,0],[0,(1-gamma_1_long)**.5,0],[0,0,(1-gamma_2_long)**.5]]), np.array([[0,gamma_1_long**0.5,0],[0,0,0],[0,0,0]]), np.array([[0,0,gamma_2_long**0.5],[0,0,0],[0,0,0]])]
+
+
+class FutureSuperconductingQCErrorsBetterT1AndGates(GenericQutritErrors):
+    p_1 = .00001 / 3
+    p_2 = .0001 / 15
+    single_qutrit_kraus_operator_weights = [1 - 8*p_1] + 8 * [p_1]
+    two_qutrit_kraus_operator_weights = [1 - 80*p_2] + 80 * [p_2]
+    # Here, I picked T1 = 10000 microseconds 
+    gamma_1_short = 1 - math.exp(-1 *  100.0 / 10000000.0)
+    gamma_1_long = 1 - math.exp(-1 * 300.0 / 10000000.0)
+    gamma_2_short = 1 - math.exp(-2 *  100.0 / 10000000.0)
+    gamma_2_long = 1 - math.exp(-2 * 300.0 / 10000000.0)
+    short_idle_channel_operators = [np.array([[1,0,0],[0,(1-gamma_1_short)**.5,0],[0,0,(1-gamma_2_short)**.5]]), np.array([[0,gamma_1_short**0.5,0],[0,0,0],[0,0,0]]), np.array([[0,0,gamma_2_short**0.5],[0,0,0],[0,0,0]])]
+    long_idle_channel_operators = [np.array([[1,0,0],[0,(1-gamma_1_long)**.5,0],[0,0,(1-gamma_2_long)**.5]]), np.array([[0,gamma_1_long**0.5,0],[0,0,0],[0,0,0]]), np.array([[0,0,gamma_2_long**0.5],[0,0,0],[0,0,0]])]
+
+
 class DressedQutritErrors(NoiseChannel):
     idle_channel_operators = [Z3, Z3 @ Z3, np.eye(3)]
     long_idle_channel_weights = [0.0000228617, 0.0000228617, 0.9999542766]
