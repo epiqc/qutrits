@@ -1574,7 +1574,7 @@ class FutureSuperconductingQCErrorsBetterT1(GenericQutritErrors):
     long_idle_channel_operators = [np.array([[1,0,0],[0,(1-gamma_1_long)**.5,0],[0,0,(1-gamma_2_long)**.5]]), np.array([[0,gamma_1_long**0.5,0],[0,0,0],[0,0,0]]), np.array([[0,0,gamma_2_long**0.5],[0,0,0],[0,0,0]])]
 
 
-class FutureSuperconductingQCErrorsBetterT1AndGates(GenericQutritErrors):
+class FutureSuperconductingQCErrorsBetterGates(GenericQutritErrors):
     p_1 = .00001 / 3
     p_2 = .0001 / 15
     single_qutrit_kraus_operator_weights = [1 - 8*p_1] + 8 * [p_1]
