@@ -1367,9 +1367,9 @@ def _apply_unitary_circuit(circuit: Circuit,
 
             # Gate error:
             if matrix.size == 9:
-                gate_error_matrix = DressedQutritErrors().pick_single_qutrit_gate_channel()
+                gate_error_matrix = FutureSuperconductingQCErrors().pick_single_qutrit_gate_channel()
             elif matrix.size == 81:
-                gate_error_matrix = DressedQutritErrors().pick_two_qutrit_gate_channel()
+                gate_error_matrix = FutureSuperconductingQCErrors().pick_two_qutrit_gate_channel()
             else:
                 assert False, "%s" % matrix.size
             gate_error_matrix = gate_error_matrix.astype(dtype).reshape((3,) * (2 * len(qs)))
@@ -1379,11 +1379,12 @@ def _apply_unitary_circuit(circuit: Circuit,
         # Idle Errors:
         for index in range(len(qubits)):
             if any([len(qs) == 2 for mat, qs in moment]):  # apply long idle channel
-                gate_error_matrix = DressedQutritErrors().pick_long_idle_channel()
+                gate_error_matrix = FutureSuperconductingQCErrors().pick_long_idle_channel(state, buffer, index)
             else:
-                gate_error_matrix = DressedQutritErrors().pick_short_idle_channel()
+                gate_error_matrix = FutureSuperconductingQCErrors().pick_short_idle_channel(state, buffer, index)
             gate_error_matrix = gate_error_matrix.astype(dtype).reshape((3,) * 2)
             linalg.targeted_left_multiply(gate_error_matrix, state, [index], out=buffer)
+            buffer /= np.linalg.norm(buffer)  # idle errors may be incoherent (non-unitary) so need to renormalize
             state, buffer = buffer, state
 
     return state
@@ -1480,11 +1481,11 @@ class NoiseChannel(object):
         index = weighted_draw(self.two_qutrit_kraus_operator_weights)
         return self.two_qutrit_kraus_operators[index]
 
-    def pick_long_idle_channel(self):
+    def pick_long_idle_channel(self, state, buffer, index):
         index = weighted_draw(self.long_idle_channel_weights)
         return self.idle_channel_operators[index]
 
-    def pick_short_idle_channel(self):
+    def pick_short_idle_channel(self, state, buffer, index):
         index = weighted_draw(self.short_idle_channel_weights)
         return self.idle_channel_operators[index]
 
@@ -1493,6 +1494,71 @@ X3 = np.array([[0, 0, 1], [1, 0, 0], [0, 1, 0]])
 Z3 = np.array([[1, 0, 0], [0, math.e ** (math.pi * 1j * -2.0/3.0), 0], [0, 0, math.e ** (math.pi * 1j * -4.0/3.0)]])
 Y3 = X3 @ Z3
 V3 = X3 @ Z3 @ Z3
+
+class GenericQutritErrors(NoiseChannel):
+    single_qutrit_kraus_operators = [np.eye(3), Z3, Z3 @ Z3, X3, X3 @ Z3, X3 @ Z3 @ Z3, X3 @ X3, X3 @ X3 @ Z3, X3 @ X3 @ Z3 @ Z3]
+    two_qutrit_kraus_operators = [np.kron(np.eye(3), np.eye(3)), np.kron(np.eye(3), Z3), np.kron(np.eye(3), Z3 @ Z3), np.kron(np.eye(3), X3), np.kron(np.eye(3), X3 @ Z3), np.kron(np.eye(3), X3 @ Z3 @ Z3), np.kron(np.eye(3), X3 @ X3), np.kron(np.eye(3), X3 @ X3 @ Z3), np.kron(np.eye(3), X3 @ X3 @ Z3 @ Z3),
+            np.kron(Z3, np.eye(3)), np.kron(Z3, Z3), np.kron(Z3, Z3 @ Z3), np.kron(Z3, X3), np.kron(Z3, X3 @ Z3), np.kron(Z3, X3 @ Z3 @ Z3), np.kron(Z3, X3 @ X3), np.kron(Z3, X3 @ X3 @ Z3), np.kron(Z3, X3 @ X3 @ Z3 @ Z3),
+            np.kron(Z3 @ Z3, np.eye(3)), np.kron(Z3 @ Z3, Z3), np.kron(Z3 @ Z3, Z3 @ Z3), np.kron(Z3 @ Z3, X3), np.kron(Z3 @ Z3, X3 @ Z3), np.kron(Z3 @ Z3, X3 @ Z3 @ Z3), np.kron(Z3 @ Z3, X3 @ X3), np.kron(Z3 @ Z3, X3 @ X3 @ Z3), np.kron(Z3 @ Z3, X3 @ X3 @ Z3 @ Z3),
+            np.kron(X3, np.eye(3)), np.kron(X3, Z3), np.kron(X3, Z3 @ Z3), np.kron(X3, X3), np.kron(X3, X3 @ Z3), np.kron(X3, X3 @ Z3 @ Z3), np.kron(X3, X3 @ X3), np.kron(X3, X3 @ X3 @ Z3), np.kron(X3, X3 @ X3 @ Z3 @ Z3),
+            np.kron(X3 @ Z3, np.eye(3)), np.kron(X3 @ Z3, Z3), np.kron(X3 @ Z3, Z3 @ Z3), np.kron(X3 @ Z3, X3), np.kron(X3 @ Z3, X3 @ Z3), np.kron(X3 @ Z3, X3 @ Z3 @ Z3), np.kron(X3 @ Z3, X3 @ X3), np.kron(X3 @ Z3, X3 @ X3 @ Z3), np.kron(X3 @ Z3, X3 @ X3 @ Z3 @ Z3),
+            np.kron(X3 @ Z3 @ Z3, np.eye(3)), np.kron(X3 @ Z3 @ Z3, Z3), np.kron(X3 @ Z3 @ Z3, Z3 @ Z3), np.kron(X3 @ Z3 @ Z3, X3), np.kron(X3 @ Z3 @ Z3, X3 @ Z3), np.kron(X3 @ Z3 @ Z3, X3 @ Z3 @ Z3), np.kron(X3 @ Z3 @ Z3, X3 @ X3), np.kron(X3 @ Z3 @ Z3, X3 @ X3 @ Z3), np.kron(X3 @ Z3 @ Z3, X3 @ X3 @ Z3 @ Z3),
+            np.kron(X3 @ X3, np.eye(3)), np.kron(X3 @ X3, Z3), np.kron(X3 @ X3, Z3 @ Z3), np.kron(X3 @ X3, X3), np.kron(X3 @ X3, X3 @ Z3), np.kron(X3 @ X3, X3 @ Z3 @ Z3), np.kron(X3 @ X3, X3 @ X3), np.kron(X3 @ X3, X3 @ X3 @ Z3), np.kron(X3 @ X3, X3 @ X3 @ Z3 @ Z3),
+            np.kron(X3 @ X3 @ Z3, np.eye(3)), np.kron(X3 @ X3 @ Z3, Z3), np.kron(X3 @ X3 @ Z3, Z3 @ Z3), np.kron(X3 @ X3 @ Z3, X3), np.kron(X3 @ X3 @ Z3, X3 @ Z3), np.kron(X3 @ X3 @ Z3, X3 @ Z3 @ Z3), np.kron(X3 @ X3 @ Z3, X3 @ X3), np.kron(X3 @ X3 @ Z3, X3 @ X3 @ Z3), np.kron(X3 @ X3 @ Z3, X3 @ X3 @ Z3 @ Z3),
+            np.kron(X3 @ X3 @ Z3 @ Z3, np.eye(3)), np.kron(X3 @ X3 @ Z3 @ Z3, Z3), np.kron(X3 @ X3 @ Z3 @ Z3, Z3 @ Z3), np.kron(X3 @ X3 @ Z3 @ Z3, X3), np.kron(X3 @ X3 @ Z3 @ Z3, X3 @ Z3), np.kron(X3 @ X3 @ Z3 @ Z3, X3 @ Z3 @ Z3), np.kron(X3 @ X3 @ Z3 @ Z3, X3 @ X3), np.kron(X3 @ X3 @ Z3 @ Z3, X3 @ X3 @ Z3), np.kron(X3 @ X3 @ Z3 @ Z3, X3 @ X3 @ Z3 @ Z3)]
+
+    def pick_long_idle_channel(self, state, buffer, index):
+        weights = []
+        for gate_error_matrix in self.long_idle_channel_operators:
+            gate_error_matrix = gate_error_matrix.astype(np.complex128).reshape((3,) * 2)
+            linalg.targeted_left_multiply(gate_error_matrix, state[:], [index], out=buffer)
+            weights.append(np.linalg.norm(buffer) ** 2)
+
+        index = weighted_draw(weights)
+        return self.short_idle_channel_operators[index]
+
+    def pick_short_idle_channel(self, state, buffer, index):
+        weights = []
+        for gate_error_matrix in self.short_idle_channel_operators:
+            gate_error_matrix = gate_error_matrix.astype(np.complex128).reshape((3,) * 2)
+            linalg.targeted_left_multiply(gate_error_matrix, state[:], [index], out=buffer)
+            weights.append(np.linalg.norm(buffer) ** 2)
+
+        index = weighted_draw(weights)
+        return self.long_idle_channel_operators[index]
+
+
+class CurrentSuperconductingQCErrors(GenericQutritErrors):
+    p_1 = .001 / 3  # single qubit gate error  (https://arxiv.org/pdf/1702.01852.pdf and www.research.ibm.com/ibm-q/technology/devices)
+                    # division by 3 because 3 possible error channels for qubits
+    p_2 = .01 / 15  # same references, division by 15 because 15 error channels for qubits
+    single_qutrit_kraus_operator_weights = [1 - 8*p_1] + 8 * [p_1]
+    two_qutrit_kraus_operator_weights = [1 - 80*p_2] + 80 * [p_2]
+    # gamma_m = 1 - e^(-m * dt / T1), where dt is gate time duration (https://web.physics.ucsb.edu/~martinisgroup/papers/Ghosh2013b.pdf)
+    # Here, I picked T1 = 100 microseconds (representative from https://www.research.ibm.com/ibm-q/technology/devices/)
+    # and dt = 100 ns for single-qudit gates and 300 ns for two-qudit gates (https://arxiv.org/pdf/1702.01852.pdf)
+    gamma_1_short = 1 - math.exp(-1 *  100.0 / 100000.0)
+    gamma_1_long = 1 - math.exp(-1 * 300.0 / 100000.0)
+    gamma_2_short = 1 - math.exp(-2 *  100.0 / 100000.0)
+    gamma_2_long = 1 - math.exp(-2 * 300.0 / 100000.0)
+    short_idle_channel_operators = [np.array([[1,0,0],[0,(1-gamma_1_short)**.5,0],[0,0,(1-gamma_2_short)**.5]]), np.array([[0,gamma_1_short**0.5,0],[0,0,0],[0,0,0]]), np.array([[0,0,gamma_2_short**0.5],[0,0,0],[0,0,0]])]
+    long_idle_channel_operators = [np.array([[1,0,0],[0,(1-gamma_1_long)**.5,0],[0,0,(1-gamma_2_long)**.5]]), np.array([[0,gamma_1_long**0.5,0],[0,0,0],[0,0,0]]), np.array([[0,0,gamma_2_long**0.5],[0,0,0],[0,0,0]])]
+
+
+class FutureSuperconductingQCErrors(GenericQutritErrors):
+    # Here, I 10x'ed T1 and 1/10x'ed the p's
+    p_1 = .0001 / 3
+    p_2 = .001 / 15
+    single_qutrit_kraus_operator_weights = [1 - 8*p_1] + 8 * [p_1]
+    two_qutrit_kraus_operator_weights = [1 - 80*p_2] + 80 * [p_2]
+    # Here, I picked T1 = 1000 microseconds 
+    gamma_1_short = 1 - math.exp(-1 *  100.0 / 1000000.0)
+    gamma_1_long = 1 - math.exp(-1 * 300.0 / 1000000.0)
+    gamma_2_short = 1 - math.exp(-2 *  100.0 / 1000000.0)
+    gamma_2_long = 1 - math.exp(-2 * 300.0 / 1000000.0)
+    short_idle_channel_operators = [np.array([[1,0,0],[0,(1-gamma_1_short)**.5,0],[0,0,(1-gamma_2_short)**.5]]), np.array([[0,gamma_1_short**0.5,0],[0,0,0],[0,0,0]]), np.array([[0,0,gamma_2_short**0.5],[0,0,0],[0,0,0]])]
+    long_idle_channel_operators = [np.array([[1,0,0],[0,(1-gamma_1_long)**.5,0],[0,0,(1-gamma_2_long)**.5]]), np.array([[0,gamma_1_long**0.5,0],[0,0,0],[0,0,0]]), np.array([[0,0,gamma_2_long**0.5],[0,0,0],[0,0,0]])]
+
 
 class DressedQutritErrors(NoiseChannel):
     idle_channel_operators = [Z3, Z3 @ Z3, np.eye(3)]
