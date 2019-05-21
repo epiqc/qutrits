@@ -14,6 +14,8 @@
 
 # Import sub-modules.
 
+QUDIT_LEVELS = 3
+
 from cirq import (
     circuits,
     devices,
