@@ -965,7 +965,8 @@ class Circuit(ops.ParameterizableEffect):
             qubits_that_should_be_present: Iterable[ops.QubitId] = (),
             ignore_terminal_measurements: bool = True,
             ext: extension.Extensions = None,
-            dtype: np.dtype = np.complex128) -> np.ndarray:
+            dtype: np.dtype = np.complex128,
+            noise_model = None) -> np.ndarray:
         """Left-multiplies a state vector by the circuit's unitary effect.
 
         A circuit's "unitary effect" is the unitary matrix produced by
@@ -1040,7 +1041,7 @@ class Circuit(ops.ParameterizableEffect):
 
         state.shape = (cirq.QUDIT_LEVELS,) * n
 
-        result = _apply_unitary_circuit(self, state, qs, ext, dtype)
+        result = _apply_unitary_circuit(self, state, qs, ext, dtype, noise_model=noise_model)
         result = result.reshape((cirq.QUDIT_LEVELS ** n,))
 
         # return fidelity between result and target_output_state
@@ -1330,7 +1331,8 @@ def _apply_unitary_circuit(circuit: Circuit,
                            state: np.ndarray,
                            qubits: Tuple[ops.QubitId, ...],
                            ext: extension.Extensions,
-                           dtype: np.dtype) -> np.ndarray:
+                           dtype: np.dtype,
+                           noise_model = None) -> np.ndarray:
     """Applies a circuit's unitary effect to the given vector or matrix.
 
     This method assumes that the caller wants to ignore measurements.
@@ -1355,6 +1357,7 @@ def _apply_unitary_circuit(circuit: Circuit,
     Returns:
         The left-multiplied state tensor.
     """
+    assert noise_model is not None
     qubit_map = {q: i for i, q in enumerate(qubits)}
     buffer = np.zeros(state.shape, dtype=dtype)
     mat_and_qs_list = list(_extract_unitaries(circuit.all_operations(), ext))
@@ -1368,9 +1371,9 @@ def _apply_unitary_circuit(circuit: Circuit,
 
             # Gate error:
             if matrix.size == 9:
-                gate_error_matrix = FutureSuperconductingQCErrors().pick_single_qutrit_gate_channel()
+                gate_error_matrix = noise_model.pick_single_qutrit_gate_channel()
             elif matrix.size == 81:
-                gate_error_matrix = FutureSuperconductingQCErrors().pick_two_qutrit_gate_channel()
+                gate_error_matrix = noise_model.pick_two_qutrit_gate_channel()
             else:
                 assert False, "%s" % matrix.size
             gate_error_matrix = gate_error_matrix.astype(dtype).reshape((cirq.QUDIT_LEVELS,) * (2 * len(qs)))
@@ -1380,9 +1383,9 @@ def _apply_unitary_circuit(circuit: Circuit,
         # Idle Errors:
         for index in range(len(qubits)):
             if any([len(qs) == 2 for mat, qs in moment]):  # apply long idle channel
-                gate_error_matrix = FutureSuperconductingQCErrors().pick_long_idle_channel(state, buffer, index)
+                gate_error_matrix = noise_model.pick_long_idle_channel(state, buffer, index)
             else:
-                gate_error_matrix = FutureSuperconductingQCErrors().pick_short_idle_channel(state, buffer, index)
+                gate_error_matrix = noise_model.pick_short_idle_channel(state, buffer, index)
             gate_error_matrix = gate_error_matrix.astype(dtype).reshape((cirq.QUDIT_LEVELS,) * 2)
             linalg.targeted_left_multiply(gate_error_matrix, state, [index], out=buffer)
             buffer /= np.linalg.norm(buffer)  # idle errors may be incoherent (non-unitary) so need to renormalize
