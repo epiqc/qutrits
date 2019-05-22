@@ -1,12 +1,31 @@
+This is the code accompanying Asymptotic Improvements to Quantum Circuits via Qutrits.
+
+The code is built on the 0.4.0.dev35 version of cirq. The results of our simulations are in the results/ directory.
+
+Our results can be reproduced by following the code block below, for different noise models.
+
+The quantum trajectories style simulation is accomplished in the `apply_unitary_effect_to_state(...)` method.
+
+In principle, the code can be generalized for arbitrary qudit levels by setting QUDIT_LEVELS in cirq/__init__.py.
+
+However, the specific gate set and noise models provided here are for qutrits.
+
 .. code-block:: python
 
-  N = 14
   import cirq
   from cirq import qutrit
   import numpy as np
+
+  N = 14
   g = qutrit.BTBCnUGate()
   op = g(*cirq.LineQubit.range(N))
   c = cirq.Circuit.from_ops(op.default_decompose(), strategy=cirq.InsertStrategy.EARLIEST)
+
+  # currently available noise models in cirq/circuits/circuit.py are:
+  # CurrentSuperconductingQCErrors, FutureSuperconductingQCErrors, FutureSuperconductingQCErrorsBetterT1,
+  # FutureSuperconductingQCErrorsBetterGates, FutureSuperconductingQCErrorsBetterT1AndGates,
+  # DressedQutritErrors, BareQutritErrors
+  noise_model = cirq.circuits.circuit.CurrentSuperconductingQCErrors
 
 
   def get_random_state(n):
@@ -20,7 +39,7 @@
       return rand_state3
 
   for _ in range(1000):
-      print(c.apply_unitary_effect_to_state(get_random_state(N))[0])
+      print(c.apply_unitary_effect_to_state(get_random_state(N), noise_model=noise_model)[0])
 
 -----------
 
