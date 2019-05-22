@@ -29,6 +29,7 @@ from typing import (
 import numpy as np
 import math
 
+import cirq
 from cirq import devices, ops, extension, study, linalg, protocols
 from cirq.circuits.insert_strategy import InsertStrategy
 from cirq.circuits.moment import Moment
@@ -1027,20 +1028,20 @@ class Circuit(ops.ParameterizableEffect):
         n = len(qs)
 
         if isinstance(initial_state, int):
-            state = np.zeros(3 ** n, dtype=dtype)
+            state = np.zeros(cirq.QUDIT_LEVELS ** n, dtype=dtype)
             state[initial_state] = 1
         else:
             state = initial_state.astype(dtype)
 
         target_output_state = np.copy(state)
-        tmp = target_output_state[int((n - 1) * '1' + '0', 3)]
-        target_output_state[int((n - 1) * '1' + '0', 3)] = target_output_state[int((n - 1) * '1' + '1', 3)]
-        target_output_state[int((n - 1) * '1' + '1', 3)] = tmp
+        tmp = target_output_state[int((n - 1) * '1' + '0', cirq.QUDIT_LEVELS)]
+        target_output_state[int((n - 1) * '1' + '0', cirq.QUDIT_LEVELS)] = target_output_state[int((n - 1) * '1' + '1', cirq.QUDIT_LEVELS)]
+        target_output_state[int((n - 1) * '1' + '1', cirq.QUDIT_LEVELS)] = tmp
 
-        state.shape = (3,) * n
+        state.shape = (cirq.QUDIT_LEVELS,) * n
 
         result = _apply_unitary_circuit(self, state, qs, ext, dtype)
-        result = result.reshape((3 ** n,))
+        result = result.reshape((cirq.QUDIT_LEVELS ** n,))
 
         # return fidelity between result and target_output_state
         return np.linalg.norm(np.vdot(result, target_output_state)) ** 2, result
@@ -1360,7 +1361,7 @@ def _apply_unitary_circuit(circuit: Circuit,
     moments = reconstruct_moments(mat_and_qs_list)
     for moment in moments:
         for mat, qs in moment:
-            matrix = mat.astype(dtype).reshape((3,) * (2 * len(qs)))
+            matrix = mat.astype(dtype).reshape((cirq.QUDIT_LEVELS,) * (2 * len(qs)))
             indices = [qubit_map[q] for q in qs]
             linalg.targeted_left_multiply(matrix, state, indices, out=buffer)
             state, buffer = buffer, state
@@ -1372,7 +1373,7 @@ def _apply_unitary_circuit(circuit: Circuit,
                 gate_error_matrix = FutureSuperconductingQCErrors().pick_two_qutrit_gate_channel()
             else:
                 assert False, "%s" % matrix.size
-            gate_error_matrix = gate_error_matrix.astype(dtype).reshape((3,) * (2 * len(qs)))
+            gate_error_matrix = gate_error_matrix.astype(dtype).reshape((cirq.QUDIT_LEVELS,) * (2 * len(qs)))
             linalg.targeted_left_multiply(gate_error_matrix, state, indices, out=buffer)
             state, buffer = buffer, state
 
@@ -1382,7 +1383,7 @@ def _apply_unitary_circuit(circuit: Circuit,
                 gate_error_matrix = FutureSuperconductingQCErrors().pick_long_idle_channel(state, buffer, index)
             else:
                 gate_error_matrix = FutureSuperconductingQCErrors().pick_short_idle_channel(state, buffer, index)
-            gate_error_matrix = gate_error_matrix.astype(dtype).reshape((3,) * 2)
+            gate_error_matrix = gate_error_matrix.astype(dtype).reshape((cirq.QUDIT_LEVELS,) * 2)
             linalg.targeted_left_multiply(gate_error_matrix, state, [index], out=buffer)
             buffer /= np.linalg.norm(buffer)  # idle errors may be incoherent (non-unitary) so need to renormalize
             state, buffer = buffer, state

@@ -44,8 +44,8 @@ class SingleQubitMatrixGate(raw_types.Gate,
         Args:
             matrix: The matrix that defines the gate.
         """
-        if matrix.shape not in [(2, 2), (3, 3)] or not linalg.is_unitary(matrix):
-            raise ValueError('Not a 2x2 or 3x3 unitary matrix: {}'.format(matrix))
+        if matrix.shape not in [(cirq.QUDIT_LEVELS, cirq.QUDIT_LEVELS)] or not linalg.is_unitary(matrix):
+            raise ValueError('Unitary matrix has wrong dimensions: {}'.format(matrix))
         self._matrix = matrix
 
     def validate_args(self, qubits):
@@ -124,8 +124,8 @@ class TwoQubitMatrixGate(raw_types.Gate,
             matrix: The matrix that defines the gate.
         """
 
-        if matrix.shape not in [(4, 4), (9, 9)] or not linalg.is_unitary(matrix):
-            raise ValueError('Not a 4x4 or 9x9 unitary matrix: {}'.format(matrix))
+        if matrix.shape not in [(cirq.QUDIT_LEVELS ** 2, cirq.QUDIT_LEVELS ** 2)] or not linalg.is_unitary(matrix):
+            raise ValueError('Unitary matrix has wrong dimensions: {}'.format(matrix))
         self._matrix = matrix
 
     def validate_args(self, qubits):
