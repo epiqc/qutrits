@@ -1,14 +1,8 @@
 This is the code accompanying Asymptotic Improvements to Quantum Circuits via Qutrits.
 
-The code is built on the 0.4.0.dev35 version of cirq. The results of our simulations are in the results/ directory.
+The code is built on top of the 0.4.0.dev35 version of cirq. The results of our simulations are in the results/ directory. Our results can be reproduced by following the code block below, for each of the different noise models.
 
-Our results can be reproduced by following the code block below, for different noise models.
-
-The quantum trajectories style simulation is accomplished in the `apply_unitary_effect_to_state(...)` method.
-
-In principle, the code can be generalized for arbitrary qudit levels by setting QUDIT_LEVELS in cirq/__init__.py.
-
-However, the specific gate set and noise models provided here are for qutrits.
+The quantum trajectories style simulation is accomplished in the `apply_unitary_effect_to_state(...)` method. In principle, the code can be generalized for arbitrary qudit levels by setting QUDIT_LEVELS in cirq/__init__.py. However, the specific gate set and noise models provided here are for qutrits.
 
 .. code-block:: python
 
