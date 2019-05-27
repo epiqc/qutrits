@@ -24,14 +24,3 @@ from cirq.qutrit.evaluate import (
     verify_gate_inverse,
     verify_decomposition_inverse,
 )
-
-from cirq.qutrit.ancilla_generation_gate import AncillaGen
-from cirq.qutrit.small_plus_k_carry import SmallPlusKCarry
-from cirq.qutrit.plus_k_gate import (
-    PlusKGate,
-    PlusKCarryGate,
-    PlusKUncarryAddGate,
-    UpwardMultiAndGate,
-    UpwardMultiControlPlusOneGate,
-    MultiOrAndGate,
-)
